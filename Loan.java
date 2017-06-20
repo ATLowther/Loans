@@ -6,12 +6,14 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
-public class Loan {
+public class Loan 
+{
 	
 	private double startingBalance;
-	private double currentBalance;
+	public double currentBalance;
 	private double interestRate;
 	private String interestFrequency;
+	private double minPaymentPercentage;
 	private Date loanStartDate;	
 	private Date loanEndDate;
 	private ArrayList<Payments> payments;
@@ -25,7 +27,9 @@ public class Loan {
 		this.loanStartDate = null;
 		this.loanEndDate = null;
 		this.payments = new ArrayList<Payments>();
+		this.minPaymentPercentage = 0.01;
 	}
+	
 	public Loan(double startingBalance)
 	{
 		this();
@@ -67,7 +71,6 @@ public class Loan {
 				if (payments.indexOf(pay) == 0)
 				{
 					int daysBetweenPayments = (int)TimeUnit.MILLISECONDS.toDays(pay.paymentDate.getTime()) - (int)TimeUnit.MILLISECONDS.toDays(loanStartDate.getTime());
-					System.out.println("This many days until 1st payment " + daysBetweenPayments);
 					for(short g = 1; g <= daysBetweenPayments; g++)				
 					{
 						 this.currentBalance += this.currentBalance * this.interestRate;					
@@ -76,20 +79,19 @@ public class Loan {
 				else
 				{
 					int daysBetweenPayments = (int)TimeUnit.MILLISECONDS.toDays(pay.paymentDate.getTime()) - (int)TimeUnit.MILLISECONDS.toDays(payments.get(payments.indexOf(pay) - 1).paymentDate.getTime());
-					System.out.println("This many days until 1st payment " + daysBetweenPayments);
 					for(short g = 1; g <= daysBetweenPayments; g++)				
 					{
 						 this.currentBalance += this.currentBalance * this.interestRate;					
 					}	
 				}			
-				this.currentBalance -= pay.getPaymentAmount();				
+				this.currentBalance -= pay.getPaymentAmount();	
+				int daysSinceStartOfLoan = (int)TimeUnit.MILLISECONDS.toDays(System.currentTimeMillis()) - (int)TimeUnit.MILLISECONDS.toDays(payments.get(payments.size() - 1).paymentDate.getTime());
+				for(short i = 1; i < daysSinceStartOfLoan; i++)
+				{
+					 this.currentBalance += this.currentBalance * this.interestRate;
+				}	
 			}
-			int daysSinceStartOfLoan = (int)TimeUnit.MILLISECONDS.toDays(System.currentTimeMillis()) - (int)TimeUnit.MILLISECONDS.toDays(payments.get(payments.size() - 1).paymentDate.getTime());
-			System.out.println("This many days after 1st payment " + daysSinceStartOfLoan);
-			for(short i = 1; i < daysSinceStartOfLoan; i++)
-			{
-				 this.currentBalance += this.currentBalance * this.interestRate;
-			}	
+
 	}
 	
 	public double getCurrentBalance()	
@@ -107,4 +109,60 @@ public class Loan {
 	{
 		payments.add(newPayment);		
 	}
+	
+	public double getMinimumPayment()
+	{
+		return ((this.currentBalance * this.minPaymentPercentage) > 20.0) ? this.currentBalance * this.minPaymentPercentage : 20.0;
+	}
+	
+	
+	
+	public static void payOffBalance()
+	{
+		double x = 2000.00;
+		payOffBalance(x);
+	}
+	
+	public static void payOffBalance(double x)
+	{
+		double balance = x;
+		int paymentNum = 0;
+		double interestRate = .15;
+		System.out.println("Current balance: " + balance);
+		while (balance > 0.00)
+		{
+			balance += (balance * (interestRate/365));
+			double minPayment = ((balance * .01) > 20) ? balance * .01 : 20;
+			if (minPayment > balance)
+				balance -= balance;
+			else
+				balance -= minPayment;
+			paymentNum++;
+			System.out.printf("Your new balance is: $%.2f, Payment num: %d", balance, paymentNum);
+			System.out.println();		
+		}
+	}
+	
+	public static void payOffBalance(Loan loanee)
+	{
+		double balance = loanee.currentBalance;
+		int paymentNum = 0;
+		double interestRate = loanee.interestRate;
+		System.out.printf("Current balance: $%.2f\n", balance);
+		while (balance > 0.00)
+		{
+			balance += (balance * (interestRate/365));
+			double minPayment = ((balance * .01) > 20) ? balance * .01 : 20;
+			if (minPayment > balance)
+				balance -= balance;
+			else
+				balance -= minPayment;
+			paymentNum++;
+			System.out.printf("Your new balance is: $%.2f, Payment num: %d", balance, paymentNum);
+			System.out.println();		
+		}
+		
+	}
+	
+	
 }
